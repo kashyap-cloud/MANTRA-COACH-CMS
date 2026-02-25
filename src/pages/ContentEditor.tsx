@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import SearchableSelect from "@/components/SearchableSelect";
+import SearchableMultiSelect from "@/components/SearchableMultiSelect";
 import {
   ContentItem,
   CONTENT_TYPES,
@@ -90,12 +91,12 @@ const ContentEditor = () => {
             {/* Content Type */}
             <div className="space-y-1.5">
               <Label className="text-sm font-medium">Content Type</Label>
-              <Select value={form.contentType} onValueChange={(v) => update({ contentType: v })}>
-                <SelectTrigger className="bg-background"><SelectValue placeholder="Select type" /></SelectTrigger>
-                <SelectContent>
-                  {CONTENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={CONTENT_TYPES}
+                value={form.contentType}
+                onChange={(v) => update({ contentType: v })}
+                placeholder="Select type"
+              />
             </div>
 
             {/* Title */}
@@ -106,34 +107,24 @@ const ContentEditor = () => {
 
             {/* Category */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Category</Label>
-              <Select value={form.category} onValueChange={(v) => update({ category: v })}>
-                <SelectTrigger className="bg-background"><SelectValue placeholder="Select category" /></SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label className="text-sm font-medium">Category (Topic)</Label>
+              <SearchableSelect
+                options={CATEGORIES}
+                value={form.category}
+                onChange={(v) => update({ category: v })}
+                placeholder="Select category"
+              />
             </div>
 
             {/* Focus Areas */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Focus Areas</Label>
-              <div className="flex flex-wrap gap-2">
-                {FOCUS_AREAS.map((area) => (
-                  <Badge
-                    key={area}
-                    variant={form.focusAreas.includes(area) ? "default" : "outline"}
-                    className={`cursor-pointer transition-all ${
-                      form.focusAreas.includes(area)
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                        : "hover:bg-accent"
-                    }`}
-                    onClick={() => toggleFocus(area)}
-                  >
-                    {area}
-                  </Badge>
-                ))}
-              </div>
+              <SearchableMultiSelect
+                options={FOCUS_AREAS}
+                value={form.focusAreas}
+                onChange={(v) => update({ focusAreas: v })}
+                placeholder="Select focus areas"
+              />
             </div>
 
             {/* Content Link */}

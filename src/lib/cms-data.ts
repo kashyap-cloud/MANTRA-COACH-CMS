@@ -14,36 +14,42 @@ export interface ContentItem {
 }
 
 export const CONTENT_TYPES = [
-  "Video",
   "Audio",
-  "Article",
-  "PDF",
-  "Course",
-  "Workshop",
+  "Video",
+  "Reading",
+  "Exercise",
+  "Collection",
 ];
 
 export const CATEGORIES = [
-  "Meditation",
-  "Breathwork",
-  "Yoga",
-  "Mindfulness",
-  "Coaching",
-  "Wellness",
-  "Nutrition",
-  "Movement",
+  "Balance",
+  "Communication",
+  "Empowerment",
+  "Performance",
+  "Presence",
+  "Purpose",
 ];
 
 export const FOCUS_AREAS = [
-  "Stress Relief",
-  "Focus & Clarity",
-  "Sleep",
-  "Energy",
-  "Emotional Balance",
-  "Self-Discovery",
+  "Appreciation",
+  "Authenticity",
+  "Centeredness",
+  "Collaboration",
+  "Communication",
+  "Conflict Management",
+  "Delegation",
+  "Emotional Intelligence",
+  "Emotional Regulation",
+  "Feedback",
+  "Goal Setting",
+  "Growth Mindset",
+  "Mindfulness",
+  "Motivation",
+  "Problem Solving",
   "Resilience",
-  "Creativity",
-  "Relationships",
-  "Body Awareness",
+  "Time Management",
+  "Values",
+  "Vision",
 ];
 
 const STORAGE_KEY = "mantracoach-cms-content";

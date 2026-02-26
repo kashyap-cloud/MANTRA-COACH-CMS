@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import SearchableSelect from "@/components/SearchableSelect";
 import SearchableMultiSelect from "@/components/SearchableMultiSelect";
+import { toast } from "sonner";
 import {
   ContentItem,
   CONTENT_TYPES,
@@ -16,7 +17,8 @@ import {
   getContentById,
   saveContent,
 } from "@/lib/cms-data";
-import { ArrowLeft, BookOpen, Clock, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, BookOpen, Clock, Image as ImageIcon, Share2 } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
 
 const empty: ContentItem = {
   id: "",
@@ -25,6 +27,7 @@ const empty: ContentItem = {
   category: "",
   focusAreas: [],
   contentLink: "",
+  contentBody: "",
   thumbnailUrl: "",
   duration: "",
   description: "",
@@ -38,14 +41,34 @@ const ContentEditor = () => {
   const navigate = useNavigate();
   const isNew = id === "new";
   const [form, setForm] = useState<ContentItem>({ ...empty, id: crypto.randomUUID() });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!isNew && id) {
-      const existing = getContentById(id);
-      if (existing) setForm(existing);
-      else navigate("/");
+      const loadExisting = async () => {
+        setLoading(true);
+        try {
+          const existing = await getContentById(id);
+          if (existing) setForm(existing);
+          else navigate("/");
+        } catch (err) {
+          toast.error("Failed to load content details");
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadExisting();
     }
   }, [id, isNew, navigate]);
+
+  if (loading && !form.title) {
+    return (
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-background">
+        <BrandLogo size="lg" className="mb-6 animate-pulse" />
+        <p className="text-muted-foreground font-medium animate-pulse">Loading your content...</p>
+      </div>
+    );
+  }
 
   const update = (partial: Partial<ContentItem>) => setForm((prev) => ({ ...prev, ...partial }));
 
@@ -57,29 +80,47 @@ const ContentEditor = () => {
     });
   };
 
-  const handleSave = (publish: boolean) => {
+  const handleSave = async (publish: boolean) => {
     if (!form.title.trim()) return;
-    saveContent({ ...form, published: publish });
-    navigate("/");
+    setLoading(true);
+    try {
+      await saveContent({ ...form, published: publish });
+      toast.success(isNew ? "Content created!" : "Changes saved!");
+      navigate("/");
+    } catch (err: any) {
+      console.error("Save error:", err);
+      toast.error(err.message || "Failed to save content");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="bg-primary px-6 py-4 shadow-md">
-        <div className="mx-auto flex max-w-7xl items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-primary-foreground hover:bg-primary-foreground/10"
-            onClick={() => navigate("/")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <BookOpen className="h-5 w-5 text-primary-foreground" />
-          <h1 className="text-lg font-semibold text-primary-foreground">
-            {isNew ? "Add Content" : "Edit Content"}
-          </h1>
+      <header className="bg-white border-b border-border px-6 py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:bg-muted"
+              onClick={() => navigate("/")}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <BrandLogo size="md" />
+            <div className="h-6 w-px bg-border mx-2" />
+            <h1 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+              {isNew ? "Add Content" : "Edit Content"}
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Badge variant={form.published ? "success" : "secondary"} className="px-3 py-1">
+              {form.published ? "LIVE" : "DRAFT"}
+            </Badge>
+          </div>
         </div>
       </header>
 
@@ -147,18 +188,28 @@ const ContentEditor = () => {
 
             {/* Description */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Description</Label>
-              <Textarea className="bg-background" value={form.description} onChange={(e) => update({ description: e.target.value })} placeholder="Brief description of this content..." rows={4} />
+              <Label className="text-sm font-medium">Description (Teaser)</Label>
+              <Textarea className="bg-background" value={form.description} onChange={(e) => update({ description: e.target.value })} placeholder="Brief description of this content..." rows={2} />
             </div>
 
-            {/* Published Toggle */}
-            <div className="flex items-center justify-between rounded-lg border border-border bg-background px-4 py-3">
-              <div>
-                <Label className="cursor-pointer text-sm font-medium">Visible to users in Academy</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">Toggle to make this content live</p>
-              </div>
-              <Switch checked={form.published} onCheckedChange={(v) => update({ published: v })} />
+            {/* Content Body */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">Content Body (Article/Markdown)</Label>
+              <Textarea className="bg-background font-mono text-sm" value={form.contentBody} onChange={(e) => update({ contentBody: e.target.value })} placeholder="Write your full content here..." rows={10} />
             </div>
+
+            {/* Live Toggle */}
+            <div className="pt-4 border-t border-border flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base font-semibold">Live Status</Label>
+                <p className="text-sm text-muted-foreground">Make this content visible to users in the Academy</p>
+              </div>
+              <Switch
+                checked={form.published}
+                onCheckedChange={(v) => update({ published: v })}
+              />
+            </div>
+
           </div>
         </div>
 
@@ -231,15 +282,17 @@ const ContentEditor = () => {
       {/* Sticky Footer */}
       <footer className="sticky bottom-0 border-t border-border bg-card px-6 py-3 shadow-[0_-2px_10px_-3px_rgba(0,0,0,0.08)]">
         <div className="mx-auto flex max-w-7xl items-center justify-end gap-3">
-          <Button variant="outline" onClick={() => navigate("/")}>
+          <Button variant="outline" onClick={() => navigate("/")} disabled={loading}>
             Cancel
           </Button>
-          <Button variant="secondary" onClick={() => handleSave(false)}>
-            Save Draft
+          <Button onClick={() => handleSave(form.published)} disabled={loading} className="px-8 flex gap-2">
+            {loading ? "Processing..." : form.published ? "Update & Stay Live" : isNew ? "Create Draft" : "Save Draft"}
           </Button>
-          <Button onClick={() => handleSave(true)}>
-            Publish
-          </Button>
+          {!form.published && (
+            <Button onClick={() => handleSave(true)} disabled={loading} variant="success" className="px-8 flex gap-2">
+              <Share2 className="h-4 w-4" /> {isNew ? "Create & Publish" : "Publish Now"}
+            </Button>
+          )}
         </div>
       </footer>
     </div>

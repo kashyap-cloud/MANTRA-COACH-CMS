@@ -6,9 +6,12 @@ export const config = {
 
 export default async function handler(req: Request) {
     const url = new URL(req.url);
-    // Extract the Supabase path from the request (e.g., /rest/v1/categories)
-    const supabasePath = url.pathname.replace('/api/supabase/', '');
+    // Extract the Supabase path more reliably
+    const pathParts = url.pathname.split('/api/supabase/');
+    const supabasePath = pathParts.length > 1 ? pathParts[1] : '';
+
     const targetUrl = `https://zxtwalppkrftzunrmcqm.supabase.co/${supabasePath}${url.search}`;
+    console.log("Proxying request to:", targetUrl);
 
     // Forward the request to Supabase
     const response = await fetch(targetUrl, {
